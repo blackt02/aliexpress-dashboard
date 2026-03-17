@@ -52,7 +52,7 @@ def _parse_custom_params(raw_str: str) -> str:
         return ""
     try:
         d = json.loads(raw_str)
-        return d.get("af_sub") or d.get("sub_id") or str(list(d.values())[0]) if d else ""
+        return d.get("af") or d.get("af_sub") or d.get("sub_id") or (str(list(d.values())[0]) if d else "")
     except Exception:
         return raw_str
 
