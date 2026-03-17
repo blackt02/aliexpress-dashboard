@@ -23,6 +23,8 @@ CREATE TABLE IF NOT EXISTS orders (
     category_id                 TEXT,
     tracking_id                 TEXT,
     order_platform              TEXT,
+    sub_tracking                TEXT,
+    custom_parameters           TEXT,
     fetched_at                  TEXT
 );
 
@@ -71,6 +73,15 @@ class Database:
     def _init_db(self):
         with self._connect() as conn:
             conn.executescript(SCHEMA)
+            # Migrate: add new columns if not exist
+            for col, coltype in [
+                ("sub_tracking", "TEXT"),
+                ("custom_parameters", "TEXT"),
+            ]:
+                try:
+                    conn.execute(f"ALTER TABLE orders ADD COLUMN {col} {coltype}")
+                except Exception:
+                    pass
 
     # ── Write ────────────────────────────────────────────────────────────────
 
@@ -95,6 +106,8 @@ class Database:
                     o.get("category_id", ""),
                     o.get("tracking_id", ""),
                     o.get("order_platform", ""),
+                    o.get("sub_tracking", ""),
+                    o.get("custom_parameters", "{}"),
                     now,
                 )
             )
@@ -102,7 +115,7 @@ class Database:
         with self._connect() as conn:
             conn.executemany(
                 """
-                INSERT OR REPLACE INTO orders VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                INSERT OR REPLACE INTO orders VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """,
                 rows,
             )
