@@ -3,7 +3,7 @@ import os
 
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), "config.json")
 
-# ── Hardcoded credentials (never shown in UI) ─────────────────────────────────
+# ── Hardcoded credentials ─────────────────────────────────────────────────────
 HARDCODED_APP_KEY = "517966"
 HARDCODED_APP_SECRET = "2LkeLmkEp5J0EhXUHvH0JPb54fsBdG2l"
 
@@ -17,23 +17,43 @@ DEFAULT_CONFIG = {
 }
 
 
+def _load_from_secrets() -> dict:
+    """Read token info from Streamlit secrets (for cloud deploy)."""
+    try:
+        import streamlit as st
+
+        return {
+            "access_token": st.secrets.get("access_token", ""),
+            "refresh_token": st.secrets.get("refresh_token", ""),
+            "token_expires": str(st.secrets.get("token_expires", "")),
+            "tracking_id": st.secrets.get("tracking_id", ""),
+        }
+    except Exception:
+        return {}
+
+
 def load_config() -> dict:
+    merged = DEFAULT_CONFIG.copy()
+
+    # 1. Load from config.json if exists (local dev)
     if os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, "r") as f:
             data = json.load(f)
-        merged = DEFAULT_CONFIG.copy()
         merged.update(data)
-    else:
-        merged = DEFAULT_CONFIG.copy()
 
-    # Always enforce hardcoded credentials — never use whatever is in the file
+    # 2. Streamlit secrets override (cloud) — only overwrite if non-empty
+    secrets = _load_from_secrets()
+    for k, v in secrets.items():
+        if v:
+            merged[k] = v
+
+    # 3. Always enforce hardcoded credentials
     merged["app_key"] = HARDCODED_APP_KEY
     merged["app_secret"] = HARDCODED_APP_SECRET
     return merged
 
 
 def save_config(config: dict):
-    # Never persist app_key / app_secret — they live only in code
     safe = {k: v for k, v in config.items() if k not in ("app_key", "app_secret")}
     with open(CONFIG_FILE, "w") as f:
         json.dump(safe, f, indent=2)
