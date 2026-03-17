@@ -325,11 +325,10 @@ else:
         "category_id": "Category ID",
         "product_url": "Product URL",
     }
-    # Thêm cột trống nếu chưa có trong DB
-for col in COL_MAP:
-    if col not in df.columns:
-        df[col] = ""
-avail_cols = list(COL_MAP.keys())
+    for _col in COL_MAP:
+        if _col not in df.columns:
+            df[_col] = ""
+    avail_cols = list(COL_MAP.keys())
     display_df = df[avail_cols].rename(columns=COL_MAP)
 
     st.dataframe(
