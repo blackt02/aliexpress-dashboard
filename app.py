@@ -181,11 +181,36 @@ with st.sidebar:
 
     date_range = st.date_input("Date range", value=default_range, max_value=today)
 
-    regions = ["All"] + db.get_distinct_values("region")
+    EU_COUNTRIES = [
+        "Austria",
+        "Belgium",
+        "Bulgaria",
+        "Switzerland",
+        "Czech Republic",
+        "Germany",
+        "Denmark",
+        "Spain",
+        "Finland",
+        "France",
+        "United Kingdom",
+        "Greece",
+        "Hungary",
+        "Ireland",
+        "Italy",
+        "Netherlands",
+        "Norway",
+        "Poland",
+        "Portugal",
+        "Sweden",
+        "Slovakia",
+    ]
+    db_regions = db.get_distinct_values("region")
+    all_regions = sorted(set(EU_COUNTRIES) | set(db_regions))
+
     tracking_ids = ["All"] + db.get_distinct_values("tracking_id")
     statuses = ["All"] + db.get_distinct_values("order_status")
 
-    region = st.selectbox("Region", regions)
+    region_sel = st.multiselect("Region (bỏ trống = All)", all_regions)
     tracking_id = st.selectbox("Tracking ID", tracking_ids)
     status = st.selectbox("Order Status", statuses)
     order_id_q = st.text_input("Search by Order ID")
@@ -237,8 +262,8 @@ if refresh_clicked:
 # ── Filters ────────────────────────────────────────────────────────────────────
 _dates = date_range if isinstance(date_range, (list, tuple)) else [date_range]
 filters: dict = {"start_date": str(_dates[0]), "end_date": str(_dates[-1])}
-if region != "All":
-    filters["region"] = region
+if region_sel:
+    filters["regions"] = region_sel
 if tracking_id != "All":
     filters["tracking_id"] = tracking_id
 if status != "All":
