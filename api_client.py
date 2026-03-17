@@ -2,7 +2,7 @@
 AliExpress Affiliate API client - SHA256 signing
 """
 
-import hashlib, hmac, time, requests, json
+import hashlib, hmac, time, requests, json, json
 from typing import Tuple
 
 BASE_URL = "https://api-sg.aliexpress.com/sync"
@@ -45,6 +45,16 @@ def _parse_custom_params(raw_str: str) -> str:
     except Exception:
         return raw_str
 
+
+
+def _parse_custom_params(raw_str: str) -> str:
+    if not raw_str or raw_str in ("{}", ""):
+        return ""
+    try:
+        d = json.loads(raw_str)
+        return d.get("af_sub") or d.get("sub_id") or str(list(d.values())[0]) if d else ""
+    except Exception:
+        return raw_str
 
 def _parse_order(raw: dict) -> dict:
     custom_raw = raw.get("custom_parameters", "{}")

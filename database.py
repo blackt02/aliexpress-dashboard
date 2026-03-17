@@ -73,6 +73,10 @@ class Database:
     def _init_db(self):
         with self._connect() as conn:
             conn.executescript(SCHEMA)
+            for col, t in [("sub_tracking","TEXT"),("custom_parameters","TEXT")]:
+                try:
+                    conn.execute(f"ALTER TABLE orders ADD COLUMN {col} {t}")
+                except: pass
             # Migrate: add new columns if not exist
             for col, coltype in [
                 ("sub_tracking", "TEXT"),
