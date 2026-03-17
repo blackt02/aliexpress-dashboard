@@ -279,6 +279,94 @@ c3.metric("🏆 Est. Commission", f"${total_commission:,.2f}")
 c4.metric("📊 Avg Commission Rate", f"{avg_rate:.2f}%")
 st.divider()
 
+# ── Chart ──────────────────────────────────────────────────────────────────────
+if not df.empty:
+    import plotly.graph_objects as go
+
+    df_chart = df.copy()
+    df_chart["date"] = pd.to_datetime(df_chart["completed_payments_time"]).dt.date
+
+    daily = (
+        df_chart.groupby("date")
+        .agg(
+            paid_orders=("order_id", "count"),
+            paid_earnings=("completed_payments_amount", "sum"),
+            completed_orders=("sub_order_id", "count"),
+            completed_earnings=("estimated_payments_commission", "sum"),
+        )
+        .reset_index()
+        .sort_values("date")
+    )
+
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Scatter(
+            x=daily["date"],
+            y=daily["paid_orders"],
+            name="Paid orders",
+            mode="lines+markers",
+            line=dict(color="#3b82f6", width=2),
+            marker=dict(size=6),
+            hovertemplate="Paid orders: <b>%{y}</b><extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=daily["date"],
+            y=daily["paid_earnings"].round(2),
+            name="Paid est. earnings (USD)",
+            mode="lines+markers",
+            line=dict(color="#22c55e", width=2),
+            marker=dict(size=6),
+            hovertemplate="Paid est. earnings: <b>$%{y:.2f}</b><extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=daily["date"],
+            y=daily["completed_orders"],
+            name="Completed orders",
+            mode="lines+markers",
+            line=dict(color="#eab308", width=2),
+            marker=dict(size=6),
+            hovertemplate="Completed orders: <b>%{y}</b><extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=daily["date"],
+            y=daily["completed_earnings"].round(2),
+            name="Completed est. earnings (USD)",
+            mode="lines+markers",
+            line=dict(color="#f97316", width=2),
+            marker=dict(size=6),
+            hovertemplate="Completed est. earnings: <b>$%{y:.2f}</b><extra></extra>",
+        )
+    )
+
+    fig.update_layout(
+        title=dict(text="📈 Daily Performance", font=dict(size=18)),
+        hovermode="x unified",
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="left",
+            x=0,
+            font=dict(size=12),
+        ),
+        xaxis=dict(showgrid=True, gridcolor="#f1f5f9", tickformat="%Y-%m-%d"),
+        yaxis=dict(showgrid=True, gridcolor="#f1f5f9"),
+        margin=dict(l=20, r=20, t=60, b=20),
+        height=400,
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+    st.divider()
+
 # ── Table ──────────────────────────────────────────────────────────────────────
 if df.empty:
     if not config.get("access_token"):
