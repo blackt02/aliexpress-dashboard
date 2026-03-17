@@ -321,6 +321,7 @@ else:
         "region": "Region",
         "tracking_id": "Tracking ID",
         "order_platform": "Platform",
+        "sub_tracking": "Sub Tracking (Ref)",
         "category_id": "Category ID",
         "product_url": "Product URL",
     }
